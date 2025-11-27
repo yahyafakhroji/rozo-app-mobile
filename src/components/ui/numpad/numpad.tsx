@@ -1,15 +1,14 @@
 import { useColorScheme } from "nativewind";
-import React from "react";
+import React, { useMemo } from "react";
 import {
-  Dimensions,
   Text,
   TextStyle,
   TouchableOpacity,
   View,
   ViewStyle,
 } from "react-native";
-
-const { width } = Dimensions.get("window");
+import { getNumpadSize, moderateScale, spacing } from "@/libs/responsive";
+import { rawColors } from "@/libs/design-system";
 
 export interface NumPadProps {
   onPress: (value: string) => void;
@@ -20,8 +19,6 @@ export interface NumPadProps {
 }
 
 const dialPadContent = [1, 2, 3, 4, 5, 6, 7, 8, 9, ".", 0, "X"];
-const dialPadSize = width * 0.25;
-const dialPadTextSize = dialPadSize * 0.4;
 
 export const NumPad: React.FC<NumPadProps> = ({
   onPress,
@@ -32,38 +29,51 @@ export const NumPad: React.FC<NumPadProps> = ({
 }) => {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const colors = isDark ? rawColors.dark : rawColors.light;
 
-  const defaultButtonStyle: ViewStyle = {
-    width: dialPadSize,
-    height: dialPadSize,
-    borderRadius: dialPadSize / 2,
-    backgroundColor: isDark ? "#1f2937" : "#ffffff",
-    justifyContent: "center",
-    alignItems: "center",
-    marginVertical: 4,
-    marginHorizontal: 4,
-    shadowColor: isDark ? "rgba(0, 0, 0, 0.3)" : "rgba(0, 0, 0, 0.1)",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 4,
-    elevation: 3,
-    borderWidth: 1.5,
-    borderColor: isDark ? "#374151" : "#e5e7eb",
-  };
+  // Responsive sizes
+  const { buttonSize, fontSize, gap } = useMemo(() => getNumpadSize(), []);
 
-  const defaultButtonTextStyle: TextStyle = {
-    fontSize: dialPadTextSize,
-    fontWeight: "600",
-    color: isDark ? "#f9fafb" : "#111827",
-  };
+  const defaultButtonStyle: ViewStyle = useMemo(
+    () => ({
+      width: buttonSize,
+      height: buttonSize,
+      borderRadius: buttonSize / 2,
+      backgroundColor: colors.card,
+      justifyContent: "center",
+      alignItems: "center",
+      marginVertical: gap / 2,
+      marginHorizontal: gap / 2,
+      shadowColor: isDark ? "rgba(0, 0, 0, 0.3)" : "rgba(0, 0, 0, 0.1)",
+      shadowOffset: { width: 0, height: moderateScale(2) },
+      shadowOpacity: 1,
+      shadowRadius: moderateScale(4),
+      elevation: 3,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+    }),
+    [buttonSize, gap, colors, isDark]
+  );
 
-  const defaultContainerStyle: ViewStyle = {
-    flexDirection: "column",
-    padding: 16,
-    backgroundColor: isDark ? "#111827" : "#f9fafb",
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-  };
+  const defaultButtonTextStyle: TextStyle = useMemo(
+    () => ({
+      fontSize,
+      fontWeight: "600",
+      color: colors.text,
+    }),
+    [fontSize, colors]
+  );
+
+  const defaultContainerStyle: ViewStyle = useMemo(
+    () => ({
+      flexDirection: "column",
+      padding: spacing.lg,
+      backgroundColor: colors.backgroundSecondary,
+      borderTopLeftRadius: moderateScale(16),
+      borderTopRightRadius: moderateScale(16),
+    }),
+    [colors]
+  );
 
   const handlePress = (item: string | number) => {
     if (item === "X") {
@@ -80,15 +90,13 @@ export const NumPad: React.FC<NumPadProps> = ({
   };
 
   // Create rows for 3-column layout
-  const createRows = () => {
-    const rows = [];
+  const rows = useMemo(() => {
+    const result = [];
     for (let i = 0; i < dialPadContent.length; i += 3) {
-      rows.push(dialPadContent.slice(i, i + 3));
+      result.push(dialPadContent.slice(i, i + 3));
     }
-    return rows;
-  };
-
-  const rows = createRows();
+    return result;
+  }, []);
 
   return (
     <View style={[defaultContainerStyle, containerStyle]}>
@@ -99,7 +107,7 @@ export const NumPad: React.FC<NumPadProps> = ({
             flexDirection: "row",
             justifyContent: "space-between",
             width: "100%",
-            marginBottom: 12,
+            marginBottom: gap,
           }}
         >
           {row.map((item, colIndex) => (

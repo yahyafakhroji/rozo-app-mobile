@@ -1,29 +1,24 @@
-import { t } from "i18next";
+import { memo } from "react";
 import { View } from "react-native";
+import { useTranslation } from "react-i18next";
 
-import { ThemedText } from "@/components/themed-text";
-import { VStack } from "@/components/ui/vstack";
-
+import { ScreenHeader } from "@/components/screen-header";
 import { TransactionList } from "./transaction-list";
 
-export function TransactionScreen() {
-  return (
-    <View className="my-6 flex-1">
-      {/* Header */}
-      <VStack className="flex flex-row items-start justify-between">
-        <View className="mb-6">
-          <ThemedText style={{ fontSize: 24, fontWeight: "bold" }}>
-            {t("transaction.recentTransactions")}
-          </ThemedText>
-          <ThemedText style={{ fontSize: 14, color: "#6B7280" }} type="default">
-            {t("transaction.recentTransactionsDesc")}
-          </ThemedText>
-        </View>
-      </VStack>
+export const TransactionScreen = memo(function TransactionScreen() {
+  const { t } = useTranslation();
 
-      <View className="flex-1">
+  return (
+    <View className="flex-1">
+      <ScreenHeader
+        title={t("transaction.recentTransactions")}
+        subtitle={t("transaction.recentTransactionsDesc")}
+        showBack
+      />
+
+      <View className="flex-1 -mx-4">
         <TransactionList />
       </View>
     </View>
   );
-}
+});

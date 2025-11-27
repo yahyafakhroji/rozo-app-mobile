@@ -30,6 +30,8 @@ import { Countdown } from "@/components/ui/countdown";
 import { useSelectedTheme } from "@/hooks/use-selected-theme";
 import { useToast } from "@/hooks/use-toast";
 import { useRegeneratePayment } from "@/modules/api/api/merchant/orders";
+import { getQRCodeSize } from "@/libs/responsive";
+import { rawColors } from "@/libs/design-system";
 import { PAYMENT_METHODS, type PaymentMethodId } from "./payment-method-config";
 import PaymentMethodSelector from "./payment-method-selector";
 import { PaymentSuccess } from "./payment-success";
@@ -368,21 +370,24 @@ export function PaymentModal({
           ) : (
             <View className="items-center justify-center flex flex-col gap-4">
               {/* QR Code */}
-              <View className="size-80 items-center justify-center rounded-xl border bg-white p-2">
+              <View
+                className="items-center justify-center rounded-xl border border-background-300 bg-background-0 p-3"
+                style={{ width: getQRCodeSize() + 24, height: getQRCodeSize() + 24 }}
+              >
                 {isChangingPaymentMethod || (isOrderPending && isEnabled) ? (
                   <View
                     className="items-center justify-center"
-                    style={{ width: 200, height: 200 }}
+                    style={{ width: getQRCodeSize(), height: getQRCodeSize() }}
                   >
                     <Spinner size="large" />
-                    <Text className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+                    <Text className="mt-4 text-center text-sm text-typography-600 dark:text-typography-400">
                       {t("general.loading")}
                     </Text>
                   </View>
                 ) : qrCodeDeeplink ? (
-                  <QRCode value={qrCodeDeeplink} size={200} />
+                  <QRCode value={qrCodeDeeplink} size={getQRCodeSize()} />
                 ) : qrCodeUrl ? (
-                  <QRCode value={qrCodeUrl} size={200} />
+                  <QRCode value={qrCodeUrl} size={getQRCodeSize()} />
                 ) : (
                   <View className="mb-4 items-center justify-center">
                     <Spinner />
@@ -448,14 +453,7 @@ export function PaymentModal({
                 </View>
               ) : (
                 <View
-                  className="w-full items-center flex flex-col gap-1"
-                  style={{
-                    borderWidth: 1,
-                    borderColor:
-                      selectedTheme === "dark" ? "#374151" : "#e5e7eb",
-                    borderRadius: 8,
-                    padding: 12,
-                  }}
+                  className="w-full items-center flex flex-col gap-1 rounded-lg border border-background-300 dark:border-background-700 p-3"
                 >
                   <PaymentMethodSelector
                     existingPayment={currentOrder}

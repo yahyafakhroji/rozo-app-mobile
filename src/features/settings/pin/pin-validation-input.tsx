@@ -13,11 +13,14 @@ import { View } from "@/components/ui/view";
 import { VStack } from "@/components/ui/vstack";
 import { useToast } from "@/hooks/use-toast";
 import { useApp } from "@/providers/app.provider";
-import React, { useEffect, useRef } from "react";
+import { getPinInputSize, spacing } from "@/libs/responsive";
+import { rawColors, timing } from "@/libs/design-system";
+import React, { useEffect, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Keyboard } from "react-native";
 import { OtpInput } from "react-native-otp-entry";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useColorScheme } from "nativewind";
 
 export enum ValidationState {
   IDLE = "IDLE",
@@ -55,20 +58,19 @@ export const PINValidationInput: React.FC<PINValidationInputProps> = ({
   const { logout } = useApp();
   const insets = useSafeAreaInsets();
   const otpInputRef = useRef<any>(null);
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const colors = isDark ? rawColors.dark : rawColors.light;
 
-  // Debug: Log attempts remaining
-  useEffect(() => {
-    if (validationState === ValidationState.ERROR) {
-      console.log("[PIN Input] Attempts remaining prop:", attemptsRemaining);
-    }
-  }, [attemptsRemaining, validationState]);
+  // Responsive PIN input sizing
+  const pinSize = useMemo(() => getPinInputSize(), []);
 
   // Auto-focus OTP input when sheet opens
   useEffect(() => {
     if (isOpen && otpInputRef.current) {
       setTimeout(() => {
         otpInputRef.current?.focus();
-      }, 300);
+      }, timing.focusDelay);
     }
   }, [isOpen]);
 
@@ -77,7 +79,7 @@ export const PINValidationInput: React.FC<PINValidationInputProps> = ({
     if (validationState === ValidationState.ERROR && otpInputRef.current) {
       setTimeout(() => {
         otpInputRef.current?.clear();
-      }, 500);
+      }, timing.pinClearDelay);
     }
   }, [validationState]);
 
@@ -104,34 +106,69 @@ export const PINValidationInput: React.FC<PINValidationInputProps> = ({
   };
 
   const isValidating = validationState === ValidationState.VALIDATING;
+  const isError = validationState === ValidationState.ERROR;
+
+  // Theme-aware OTP styles
+  const otpTheme = useMemo(
+    () => ({
+      containerStyle: {
+        marginVertical: spacing.xl,
+      },
+      pinCodeContainerStyle: {
+        width: pinSize.width,
+        height: pinSize.height,
+        borderRadius: pinSize.borderRadius,
+        borderWidth: 2,
+        borderColor: isError ? colors.error : colors.border,
+        backgroundColor: isValidating
+          ? colors.backgroundSecondary
+          : colors.background,
+      },
+      pinCodeTextStyle: {
+        fontSize: pinSize.fontSize,
+        fontWeight: "600" as const,
+        color: colors.text,
+      },
+      focusStickStyle: {
+        width: 2,
+        height: pinSize.height * 0.6,
+        backgroundColor: colors.info,
+      },
+      focusedPinCodeContainerStyle: {
+        borderColor: colors.info,
+        backgroundColor: colors.backgroundSecondary,
+      },
+    }),
+    [pinSize, isError, isValidating, colors]
+  );
 
   return (
     <Actionsheet isOpen={isOpen} onClose={handleClose}>
       <ActionsheetBackdrop />
-      <ActionsheetContent style={{ paddingBottom: insets.bottom + 8 }}>
+      <ActionsheetContent style={{ paddingBottom: insets.bottom + spacing.sm }}>
         <ActionsheetDragIndicatorWrapper>
           <ActionsheetDragIndicator />
         </ActionsheetDragIndicatorWrapper>
         <VStack space="lg" className="w-full">
           <Box className="items-center">
-            <Heading size="lg" className="text-typography-950">
+            <Heading size="lg" className="text-typography-950 dark:text-typography-50">
               {title}
             </Heading>
           </Box>
 
           <View className="w-full items-center space-y-4">
             {description && (
-              <Text className="text-sm text-gray-600 text-center">
+              <Text className="text-sm text-typography-600 dark:text-typography-400 text-center">
                 {description}
               </Text>
             )}
 
             {isBlocked ? (
               <View className="w-full items-center space-y-4 py-8">
-                <Text className="text-sm text-red-600 text-center font-semibold">
+                <Text className="text-sm text-error-500 dark:text-error-400 text-center font-semibold">
                   {t("pin.validation.blocked")}
                 </Text>
-                <Text className="text-xs text-gray-500 text-center">
+                <Text className="text-xs text-typography-500 text-center">
                   {t("pin.validation.blockedDescription")}
                 </Text>
               </View>
@@ -141,52 +178,23 @@ export const PINValidationInput: React.FC<PINValidationInputProps> = ({
                   ref={otpInputRef}
                   numberOfDigits={6}
                   onFilled={handlePinFilled}
-                  focusColor="#3B82F6"
+                  focusColor={colors.info}
                   focusStickBlinkingDuration={500}
                   disabled={isValidating || isBlocked}
                   textInputProps={{
                     accessibilityLabel: "PIN Verification",
                   }}
-                  theme={{
-                    containerStyle: {
-                      marginVertical: 20,
-                    },
-                    pinCodeContainerStyle: {
-                      width: 48,
-                      height: 48,
-                      borderRadius: 8,
-                      borderWidth: 2,
-                      borderColor:
-                        validationState === ValidationState.ERROR
-                          ? "#EF4444"
-                          : "#D1D5DB",
-                      backgroundColor: isValidating ? "#F3F4F6" : "#FFFFFF",
-                    },
-                    pinCodeTextStyle: {
-                      fontSize: 18,
-                      fontWeight: "600",
-                      color: "#1F2937",
-                    },
-                    focusStickStyle: {
-                      width: 2,
-                      height: 30,
-                      backgroundColor: "#3B82F6",
-                    },
-                    focusedPinCodeContainerStyle: {
-                      borderColor: "#3B82F6",
-                      backgroundColor: "#F3F4F6",
-                    },
-                  }}
+                  theme={otpTheme}
                 />
 
-                {validationState === ValidationState.ERROR && errorMessage && (
+                {isError && errorMessage && (
                   <View className="w-full items-center space-y-1">
-                    <Text className="text-sm text-red-500 text-center font-medium">
+                    <Text className="text-sm text-error-500 dark:text-error-400 text-center font-medium">
                       {errorMessage}
                     </Text>
                     {attemptsRemaining !== undefined &&
                       attemptsRemaining > 0 && (
-                        <Text className="text-xs text-gray-500 text-center">
+                        <Text className="text-xs text-typography-500 text-center">
                           {t("pin.validation.attemptsRemaining", {
                             count: attemptsRemaining,
                           })}
@@ -196,7 +204,7 @@ export const PINValidationInput: React.FC<PINValidationInputProps> = ({
                 )}
 
                 {isValidating && (
-                  <Text className="text-sm text-gray-600 text-center">
+                  <Text className="text-sm text-typography-600 dark:text-typography-400 text-center">
                     {t("pin.validation.validating")}
                   </Text>
                 )}
