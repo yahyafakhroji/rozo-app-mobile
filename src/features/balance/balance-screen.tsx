@@ -1,7 +1,8 @@
-import { useCallback, useRef, useState } from "react";
+import { memo, useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { RefreshControl, ScrollView } from "react-native";
+import { RefreshControl, ScrollView, View } from "react-native";
 
+import { Card } from "@/components/ui/card";
 import { VStack } from "@/components/ui/vstack";
 import { useToast } from "@/hooks/use-toast";
 import { useWalletBalance } from "@/hooks/use-wallet-balance";
@@ -13,7 +14,7 @@ import { BalanceHeader } from "./balance-header";
 import { BalanceInfo } from "./balance-info";
 import { BalanceTransactions } from "./balance-transactions";
 
-export function BalanceScreen() {
+export const BalanceScreen = memo(function BalanceScreen() {
   const { t } = useTranslation();
   const { refetch, isLoading } = useWalletBalance();
   const { success } = useToast();
@@ -24,17 +25,20 @@ export function BalanceScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
 
-  const handleReceivePress = () => {
+  const handleReceivePress = useCallback(() => {
     depositDialogRef.current?.open();
-  };
+  }, []);
 
-  const handleWithdrawPress = () => {
+  const handleWithdrawPress = useCallback(() => {
     withdrawDialogRef.current?.open();
-  };
+  }, []);
 
-  const handleTopUpConfirm = (amount: string) => {
-    success(t("deposit.topUpInitiated", { amount }));
-  };
+  const handleTopUpConfirm = useCallback(
+    (amount: string) => {
+      success(t("deposit.topUpInitiated", { amount }));
+    },
+    [success, t]
+  );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -55,35 +59,32 @@ export function BalanceScreen() {
     <>
       <ScrollView
         className="flex-1"
-        style={{ padding: 0, margin: 0, width: "100%" }}
+        contentContainerClassName="pb-6"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         showsVerticalScrollIndicator={false}
       >
-        <VStack space="lg" className="pb-6">
-          {/* Header */}
+        <VStack space="lg">
+          {/* Logo Header */}
           <BalanceHeader />
 
-          {/* Balance Card */}
-          <VStack space="lg">
-            <VStack
-              className="rounded-xl border border-background-300 bg-background-0"
-              style={{ padding: 16 }}
-              space="lg"
-            >
-              <BalanceInfo
-                isLoading={isLoading}
-                refetch={handleBalanceRefresh}
-              />
-            </VStack>
-          </VStack>
+          {/* Balance Card with Actions */}
+          <Card className="rounded-xl border border-background-300 dark:border-background-700 bg-background-0 dark:bg-background-900 overflow-hidden">
+            {/* Balance Info */}
+            <BalanceInfo isLoading={isLoading} />
 
-          {/* Action Buttons */}
-          <BalanceActions
-            onReceivePress={handleReceivePress}
-            onWithdrawPress={handleWithdrawPress}
-          />
+            {/* Divider */}
+            <View className="h-px bg-background-200 dark:bg-background-700 mx-4" />
+
+            {/* Action Buttons */}
+            <View className="p-4">
+              <BalanceActions
+                onReceivePress={handleReceivePress}
+                onWithdrawPress={handleWithdrawPress}
+              />
+            </View>
+          </Card>
 
           {/* Transaction List */}
           <BalanceTransactions ref={transactionsRef} />
@@ -101,4 +102,4 @@ export function BalanceScreen() {
       <WithdrawSheet ref={withdrawDialogRef} onSuccess={() => refetch()} />
     </>
   );
-}
+});

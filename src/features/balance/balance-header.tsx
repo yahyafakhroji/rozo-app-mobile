@@ -1,22 +1,31 @@
-import { useTranslation } from "react-i18next";
+import { memo } from "react";
+import { Image, View } from "react-native";
+import { Text } from "@/components/ui/text";
+import { useColorScheme } from "nativewind";
 
-import { ThemedText } from "@/components/themed-text";
-import { View } from "@/components/ui/view";
-import { VStack } from "@/components/ui/vstack";
+const logoSource = require("@/assets/images/icon.png");
 
-export function BalanceHeader() {
-  const { t } = useTranslation();
+export const BalanceHeader = memo(function BalanceHeader() {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   return (
-    <VStack className="flex flex-row items-start justify-between pt-6">
-      <View>
-        <ThemedText style={{ fontSize: 24, fontWeight: "bold" }}>
-          {t("balance.title")}
-        </ThemedText>
-        <ThemedText style={{ fontSize: 14, color: "#6B7280" }} type="default">
-          {t("balance.description")}
-        </ThemedText>
-      </View>
-    </VStack>
+    <View className="flex-row items-center py-2">
+      <Image
+        source={logoSource}
+        style={{
+          width: 36,
+          height: 36,
+          tintColor: isDark ? "#FFFFFF" : "#0a0a0a",
+        }}
+        resizeMode="contain"
+      />
+      <Text
+        size="xl"
+        className="font-bold text-typography-950 dark:text-typography-50 ml-2"
+      >
+        Rozo
+      </Text>
+    </View>
   );
-}
+});
