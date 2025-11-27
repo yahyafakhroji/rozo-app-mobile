@@ -1,4 +1,3 @@
-'use client';
 import { createAlert } from '@gluestack-ui/core/alert/creator';
 import { View, Text } from 'react-native';
 import { tva ,

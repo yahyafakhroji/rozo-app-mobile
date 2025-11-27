@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FlatList, RefreshControl, ScrollView, View } from "react-native";
+import { FlatList, RefreshControl, View } from "react-native";
 
 import { Spinner } from "@/components/ui/spinner";
 import { VStack } from "@/components/ui/vstack";
@@ -32,20 +32,21 @@ export function OrdersScreen() {
   });
 
   useEffect(() => {
-    console.log("data", data);
     setOrders(data ?? []);
     setRefreshing(false);
   }, [data]);
 
-  const handleStatusChange = (status: MerchantOrderStatus) => {
-    setStatus(status);
-  };
+  const handleStatusChange = useCallback((newStatus: MerchantOrderStatus) => {
+    setStatus(newStatus);
+  }, []);
 
   const orderDetailRef = useRef<OrderDetailActionSheetRef>(null);
 
-  const handleOrderPress = (orderId: string) => {
+  // Memoize callback to prevent re-renders
+  const handleOrderPress = useCallback((orderId: string) => {
     orderDetailRef.current?.openOrder(orderId);
-  };
+  }, []);
+
   const onRefresh = useCallback(() => {
     setForceRefresh(true);
     setRefreshing(true);
@@ -56,11 +57,21 @@ export function OrdersScreen() {
     }, 500);
   }, [refetch]);
 
-  return (
-    
-    <ScrollView className="py-6 flex-1">
-      {/* Header */}
-      <VStack className="flex flex-row items-start justify-between">
+  // Memoize renderItem to prevent recreation
+  const renderOrderItem = useCallback(
+    ({ item }: { item: MerchantOrder }) => (
+      <OrderCard
+        order={item}
+        onPress={(order) => handleOrderPress(order.order_id)}
+      />
+    ),
+    [handleOrderPress]
+  );
+
+  // Memoize header component
+  const ListHeaderComponent = useMemo(
+    () => (
+      <VStack className="flex flex-row items-start justify-between py-6">
         <View className="mb-6">
           <ThemedText style={{ fontSize: 24, fontWeight: "bold" }}>
             {t("order.recentOrders")}
@@ -69,47 +80,38 @@ export function OrdersScreen() {
             {t("order.recentOrdersDesc")}
           </ThemedText>
         </View>
-
         <FilterOrderActionSheet onStatusChange={handleStatusChange} />
       </VStack>
+    ),
+    [t, handleStatusChange]
+  );
 
-      {isFetching && <Spinner size="small" />}
+  // Memoize empty component
+  const ListEmptyComponent = useMemo(
+    () => (isFetching ? <Spinner size="small" /> : <EmptyOrdersState />),
+    [isFetching]
+  );
 
-      {!isFetching && (
-        <>
-          {/* Orders List */}
-          <View className="space-y-4">
-            {orders.length === 0 ? (
-              <EmptyOrdersState />
-            ) : (
-              <View className="space-y-4">
-                <FlatList
-                  data={orders}
-                  keyExtractor={(item) => item.order_id}
-                  renderItem={(order) => (
-                    <OrderCard
-                      key={order.item.order_id}
-                      order={order.item}
-                      onPress={(order) => handleOrderPress(order.order_id)}
-                    />
-                  )}
-                  scrollEnabled={false}
-                  contentContainerClassName="gap-4"
-                  refreshControl={
-                    <RefreshControl
-                      refreshing={refreshing}
-                      onRefresh={onRefresh}
-                    />
-                  }
-                />
-              </View>
-            )}
-          </View>
-        </>
-      )}
-
+  return (
+    <View className="flex-1">
+      <FlatList
+        data={orders}
+        keyExtractor={(item) => item.order_id}
+        renderItem={renderOrderItem}
+        ListHeaderComponent={ListHeaderComponent}
+        ListEmptyComponent={ListEmptyComponent}
+        contentContainerClassName="gap-4 px-4"
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        // Performance optimizations
+        windowSize={10}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={50}
+        removeClippedSubviews={true}
+        showsVerticalScrollIndicator={false}
+      />
       <OrderDetailActionSheet ref={orderDetailRef} />
-    </ScrollView>
-    
+    </View>
   );
 }

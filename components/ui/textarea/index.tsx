@@ -1,4 +1,3 @@
-'use client';
 import React from 'react';
 import { createTextarea } from '@gluestack-ui/core/textarea/creator';
 import { View, TextInput } from 'react-native';

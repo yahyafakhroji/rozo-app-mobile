@@ -1,4 +1,3 @@
-'use client';
 import React from 'react';
 import { tva } from '@gluestack-ui/utils/nativewind-utils';
 import { Platform, View } from 'react-native';

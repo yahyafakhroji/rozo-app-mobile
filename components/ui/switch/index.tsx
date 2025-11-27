@@ -1,4 +1,3 @@
-'use client';
 import React from 'react';
 import { Switch as RNSwitch } from 'react-native';
 import { createSwitch } from '@gluestack-ui/core/switch/creator';

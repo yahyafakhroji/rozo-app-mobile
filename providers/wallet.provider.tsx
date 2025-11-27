@@ -211,8 +211,6 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
             });
           }
 
-          console.log(`[WALLET CREATED] for chain ${chain}`);
-
           await refreshUser();
           await refetchMerchant();
         }
@@ -252,7 +250,6 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
 
   const setPreferredPrimaryChain = useCallback(
     async (token: MerchantDefaultTokenID) => {
-      console.log("[setPreferredPrimaryChain] token:", token);
       setPreferredPrimaryChainState(token);
       await setItem(preferredChainStorageKey, token);
     },
@@ -300,11 +297,9 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   const ensureWalletExists = useCallback(
     async (chainType: "ethereum" | "stellar"): Promise<void> => {
       if (hasWalletForChain(chainType)) {
-        console.log(`[Switch Wallet] Wallet exists for ${chainType}`);
         return;
       }
 
-      console.log(`[Switch Wallet] Creating wallet for ${chainType}`);
       await handleCreateWallet(chainType);
       await refreshUser();
     },
@@ -318,7 +313,6 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
         throw new Error("Merchant data not available");
       }
 
-      console.log(`[Switch Wallet] Updating merchant preference to ${tokenId}`);
       await updateProfile({
         email: merchant.email,
         display_name: merchant.display_name,
@@ -332,13 +326,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   );
 
   const handleSwitchWallet = useCallback(async () => {
-    if (!user || !merchant) {
-      console.warn("[Switch Wallet] Missing user or merchant data");
-      return;
-    }
-
-    if (!preferredPrimaryChain) {
-      console.warn("[Switch Wallet] No preferred primary chain set");
+    if (!user || !merchant || !preferredPrimaryChain) {
       return;
     }
 
@@ -348,12 +336,6 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       const targetTokenId = getOppositeTokenId(preferredPrimaryChain);
       const targetChainType = getChainTypeFromToken(targetTokenId);
 
-      console.log("[Switch Wallet] Starting switch", {
-        from: preferredPrimaryChain,
-        to: targetTokenId,
-        chainType: targetChainType,
-      });
-
       // Step 1: Ensure target wallet exists
       await ensureWalletExists(targetChainType);
 
@@ -361,11 +343,9 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       await updateMerchantTokenPreference(targetTokenId);
 
       toastSuccess("Wallet switched successfully!");
-      console.log("[Switch Wallet] Switch completed successfully");
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      console.error("[Switch Wallet] Failed:", errorMessage, error);
       toastError(`Failed to switch wallet: ${errorMessage}`);
     } finally {
       setIsSwitching(false);

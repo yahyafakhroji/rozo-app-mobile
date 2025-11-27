@@ -1,4 +1,3 @@
-'use client';
 import React from 'react';
 import { createAlertDialog } from '@gluestack-ui/core/alert-dialog/creator';
 import { tva ,

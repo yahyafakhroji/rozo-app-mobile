@@ -1,4 +1,5 @@
 import { ClockIcon } from "lucide-react-native";
+import React, { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { TouchableOpacity, View } from "react-native";
 
@@ -13,21 +14,23 @@ interface TransactionCardProps {
   onPress?: (transaction: Transaction) => void;
 }
 
-const getStatusActionType = (
-  isInFlow: Transaction["direction"]
-): "success" | "error" | "warning" | "info" | "muted" => {
-  const statusMap: Record<
-    Transaction["direction"],
-    "success" | "error" | "warning" | "info" | "muted"
-  > = {
-    IN: "success",
-    OUT: "error",
-  };
-
-  return statusMap[isInFlow] || "muted";
+// Move outside component to avoid recreation on every render
+const STATUS_ACTION_MAP: Record<
+  Transaction["direction"],
+  "success" | "error" | "warning" | "info" | "muted"
+> = {
+  IN: "success",
+  OUT: "error",
 };
 
-export function TransactionCard({
+const getStatusActionType = (
+  direction: Transaction["direction"]
+): "success" | "error" | "warning" | "info" | "muted" => {
+  return STATUS_ACTION_MAP[direction] || "muted";
+};
+
+// Memoized to prevent re-renders when parent list re-renders
+export const TransactionCard = memo(function TransactionCard({
   transaction,
   onPress,
 }: TransactionCardProps) {
@@ -107,4 +110,4 @@ export function TransactionCard({
       </View>
     </TouchableOpacity>
   );
-}
+});

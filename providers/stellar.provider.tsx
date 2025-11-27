@@ -1,5 +1,3 @@
-"use client";
-
 import { useToast } from "@/hooks/use-toast";
 import { StellarConfig } from "@/libs/stellar/config";
 import { isAccountNotFound } from "@/libs/stellar/errors";
@@ -9,7 +7,14 @@ import {
 } from "@/libs/stellar/utils";
 import axios from "axios";
 import type { ReactNode } from "react";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { WalletBalanceInfo } from "./wallet.provider";
 
 type StellarContextProvider = { children: ReactNode; stellarRpcUrl?: string };
@@ -85,27 +90,28 @@ export const StellarProvider = ({
     );
   }, [accountInfo]);
 
-  const fetchAccountData = async (accountPublicKey: string) => {
-    try {
-      const response = await horizonClient.get(`/accounts/${accountPublicKey}`);
-      const data = response.data as StellarAccountResponse;
-      setAccountInfo(data);
-      return data;
-    } catch (error: any) {
-      if (isAccountNotFound(error)) {
-        console.log(
-          `Account ${accountPublicKey} not found - needs activation/funding`
+  const fetchAccountData = useCallback(
+    async (accountPublicKey: string) => {
+      try {
+        const response = await horizonClient.get(
+          `/accounts/${accountPublicKey}`
         );
-        setAccountInfo(undefined);
-        return null;
+        const data = response.data as StellarAccountResponse;
+        setAccountInfo(data);
+        return data;
+      } catch (error: any) {
+        if (isAccountNotFound(error)) {
+          setAccountInfo(undefined);
+          return null;
+        }
+        toastError(error.message || "Failed to get account info");
+        throw error;
       }
-      toastError(error.message || "Failed to get account info");
-      console.error("Error loading account:", error);
-      throw error;
-    }
-  };
+    },
+    [horizonClient, toastError]
+  );
 
-  const refreshAccount = async () => {
+  const refreshAccount = useCallback(async () => {
     if (!publicKey) return [] as WalletBalanceInfo[];
 
     try {
@@ -119,37 +125,43 @@ export const StellarProvider = ({
     } catch {
       return [] as WalletBalanceInfo[];
     }
-  };
+  }, [publicKey, fetchAccountData]);
 
-  const disconnect = async () => {
-    try {
-      setPublicKey(undefined);
-      setAccountInfo(undefined);
-    } catch (error: any) {
-      console.error(error);
-    }
-  };
+  const disconnect = useCallback(() => {
+    setPublicKey(undefined);
+    setAccountInfo(undefined);
+  }, []);
 
   useEffect(() => {
     if (publicKey && !accountInfo) {
       fetchAccountData(publicKey);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [publicKey, accountInfo]);
+  }, [publicKey, accountInfo, fetchAccountData]);
+
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo(
+    () => ({
+      publicKey,
+      setPublicKey,
+      hasUsdcTrustline,
+      account: accountInfo,
+      balances: formattedBalances,
+      isConnected: !!publicKey,
+      disconnect,
+      refreshAccount,
+    }),
+    [
+      publicKey,
+      hasUsdcTrustline,
+      accountInfo,
+      formattedBalances,
+      disconnect,
+      refreshAccount,
+    ]
+  );
 
   return (
-    <StellarContext.Provider
-      value={{
-        publicKey,
-        setPublicKey,
-        hasUsdcTrustline,
-        account: accountInfo,
-        balances: formattedBalances,
-        isConnected: !!publicKey,
-        disconnect,
-        refreshAccount,
-      }}
-    >
+    <StellarContext.Provider value={contextValue}>
       {children}
     </StellarContext.Provider>
   );

@@ -93,8 +93,6 @@ export const MerchantProvider: React.FC<MerchantProviderProps> = ({
     }
     return defaultToken;
   }, [merchant]);
-  console.log("[MerchantProvider] merchant:", merchant);
-  console.log("[MerchantProvider] merchantToken:", merchantToken);
 
   const defaultCurrency = useMemo(() => {
     const currency = merchant?.default_currency ?? "USD";
@@ -107,17 +105,10 @@ export const MerchantProvider: React.FC<MerchantProviderProps> = ({
       const { force = true, showToast = false } = options;
 
       try {
-        console.log(
-          "[MerchantProvider] refetchMerchant called with options:",
-          options
-        );
         setIsMerchantLoading(true);
 
         // Clear AsyncStorage cache to force fresh fetch
         if (force) {
-          console.log(
-            "[MerchantProvider] Clearing profile cache to force fresh fetch"
-          );
           removeItem(MERCHANT_KEY);
         }
 
@@ -125,10 +116,6 @@ export const MerchantProvider: React.FC<MerchantProviderProps> = ({
         const result = await fetchProfile();
 
         if (result.data) {
-          console.log(
-            "[MerchantProvider] Profile refetched successfully:",
-            result.data
-          );
           setMerchant(result.data);
           setItem(MERCHANT_KEY, result.data);
 
@@ -189,26 +176,13 @@ export const MerchantProvider: React.FC<MerchantProviderProps> = ({
     let isMounted = true;
 
     const initializeMerchant = async () => {
-      // Debug: entry, dependencies
-      console.log("[MerchantProvider] initializeMerchant called", {
-        isAuthenticated,
-        user,
-        isMounted,
-        hasInitialized: hasInitialized.current,
-      });
-
       // Skip if not authenticated or already initialized
       if (!isAuthenticated || !user || !token || !isMounted) {
-        console.log(
-          "[MerchantProvider] Skipping: Not authenticated or not mounted or no user or no token.",
-          { isAuthenticated, user: !!user, token: !!token, isMounted }
-        );
         return;
       }
 
       // Check if we've already initialized for this user
       if (hasInitialized.current) {
-        console.log("[MerchantProvider] Already initialized, skipping.");
         return;
       }
 
@@ -220,28 +194,15 @@ export const MerchantProvider: React.FC<MerchantProviderProps> = ({
         // Check for cached merchant data
         const cachedMerchant = getItem<MerchantProfile>(MERCHANT_KEY);
         if (cachedMerchant && isMounted) {
-          console.log(
-            "[MerchantProvider] Using cached merchant:",
-            cachedMerchant
-          );
           setMerchant(cachedMerchant);
           setIsMerchantLoading(false);
         }
 
         // Fetch profile
         const profileResult = await fetchProfile();
-        console.log("[MerchantProvider] Profile result:", profileResult);
 
         if (profileResult.data && isMounted) {
-          console.log(
-            "[MerchantProvider] Profile fetch success, setting merchant."
-          );
-
           if (!profileResult.data.email) {
-            console.log(
-              "[MerchantProvider] No email found, creating new profile."
-            );
-
             const privyUser = await privyClient.user.get();
             const email = privyUser.user.linked_accounts.find(
               (account) => account.type === "email"
@@ -249,10 +210,6 @@ export const MerchantProvider: React.FC<MerchantProviderProps> = ({
 
             if (email) {
               profileResult.data.email = email;
-              console.log(
-                "[MerchantProvider] Updating profile with payload:",
-                JSON.stringify(profileResult.data, null, 2)
-              );
               const newProfile = await updateProfile({
                 email: email,
                 display_name: profileResult.data.display_name,
@@ -261,9 +218,6 @@ export const MerchantProvider: React.FC<MerchantProviderProps> = ({
               setMerchant(newProfile);
               setItem(MERCHANT_KEY, newProfile);
             } else {
-              console.error(
-                "[MerchantProvider] No email found, skipping profile creation."
-              );
               setMerchant(profileResult.data);
               setItem(MERCHANT_KEY, profileResult.data);
               setIsMerchantLoading(false);
@@ -280,19 +234,9 @@ export const MerchantProvider: React.FC<MerchantProviderProps> = ({
         } else if (profileResult.error && isMounted) {
           const error = profileResult.error as unknown as AppError;
           if (error.statusCode === 404) {
-            console.log(
-              "[MerchantProvider] No profile found (404), creating new profile."
-            );
-
             // Create profile
             const logoUrl = (user as any)?.image || "";
-
             const privyUser = await privyClient.user.get();
-            console.log(
-              "[MerchantProvider] privyUser for profile creation:",
-              privyUser
-            );
-
             let email = privyUser.user.id;
             const userEmail = privyUser.user.linked_accounts.find(
               (account) => account.type === "email"
@@ -312,29 +256,16 @@ export const MerchantProvider: React.FC<MerchantProviderProps> = ({
               default_token_id: defaultToken?.key,
             };
 
-            console.log(
-              "[MerchantProvider] Creating profile with payload:",
-              profilePayload
-            );
-
             const newProfile = await createProfile(profilePayload);
             if (newProfile && isMounted) {
-              console.log("[MerchantProvider] Profile created:", newProfile);
               setMerchant(newProfile);
               setItem(MERCHANT_KEY, newProfile);
               success("Profile created successfully! Welcome to Rozo POS");
             }
           } else {
-            console.error("Profile fetch error:", error);
-
             // Check if it's a merchant status error first
             if (isMerchantStatusError(error)) {
               const statusError = error as MerchantStatusError;
-              console.error(
-                "[MerchantProvider] Merchant status error detected:",
-                statusError.statusErrorType
-              );
-
               // Log the error for analytics
               logMerchantStatusError(statusError, "profile_fetch");
 
@@ -359,27 +290,17 @@ export const MerchantProvider: React.FC<MerchantProviderProps> = ({
             const appError = error as unknown as AppError;
 
             // Don't show error toast for authentication issues if we have cached data
-            if (appError.statusCode === 401 || appError.statusCode === 403) {
-              console.warn(
-                "Authentication error during profile fetch, using cached data if available"
-              );
-            } else {
+            if (appError.statusCode !== 401 && appError.statusCode !== 403) {
               showError("Failed to load merchant profile");
             }
           }
           setIsMerchantLoading(false);
         }
       } catch (error) {
-        console.error("Merchant initialization error:", error);
         if (isMounted) {
           // Check if it's a merchant status error
           if (isMerchantStatusError(error)) {
             const statusError = error as MerchantStatusError;
-            console.error(
-              "[MerchantProvider] Merchant status error detected:",
-              statusError.statusErrorType
-            );
-
             // Log the error for analytics
             logMerchantStatusError(statusError, "merchant_initialization");
 
@@ -404,9 +325,7 @@ export const MerchantProvider: React.FC<MerchantProviderProps> = ({
           const appError = error as unknown as AppError;
 
           // Don't show error toast for authentication issues
-          if (appError.statusCode === 401 || appError.statusCode === 403) {
-            console.warn("Authentication error during merchant initialization");
-          } else {
+          if (appError.statusCode !== 401 && appError.statusCode !== 403) {
             showError("Failed to initialize merchant profile");
           }
           hasInitialized.current = false; // Reset on error
@@ -421,10 +340,6 @@ export const MerchantProvider: React.FC<MerchantProviderProps> = ({
       } finally {
         if (isMounted) {
           setIsMerchantLoading(false);
-          console.log(
-            "[MerchantProvider] Finished initializeMerchant, loading:",
-            false
-          );
         }
       }
     };
@@ -447,10 +362,6 @@ export const MerchantProvider: React.FC<MerchantProviderProps> = ({
   // Update merchant state when profile query data changes
   useEffect(() => {
     if (profileQuery.data && profileQuery.data !== merchant) {
-      console.log(
-        "[MerchantProvider] Profile query data changed, updating merchant state:",
-        profileQuery.data
-      );
       setMerchant(profileQuery.data);
       setItem(MERCHANT_KEY, profileQuery.data);
     }

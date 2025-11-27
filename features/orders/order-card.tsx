@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { ClockIcon } from "lucide-react-native";
+import React, { memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { TouchableOpacity, View } from "react-native";
 
@@ -14,8 +15,18 @@ interface OrderCardProps {
   onPress?: (order: MerchantOrder) => void;
 }
 
-export function OrderCard({ order, onPress }: OrderCardProps) {
+// Memoized to prevent re-renders when parent list re-renders
+export const OrderCard = memo(function OrderCard({
+  order,
+  onPress,
+}: OrderCardProps) {
   const { t } = useTranslation();
+
+  // Memoize date formatting to avoid recalculation
+  const formattedDate = useMemo(() => {
+    if (!order.created_at) return null;
+    return format(new Date(order.created_at), "MMM dd yyyy, HH:mm");
+  }, [order.created_at]);
 
   return (
     <TouchableOpacity activeOpacity={0.7} onPress={() => onPress?.(order)}>
@@ -52,7 +63,7 @@ export function OrderCard({ order, onPress }: OrderCardProps) {
             <ThemedText className="text-2xl font-bold" type="default">
               {order.display_amount} {order.display_currency}
             </ThemedText>
-            {order.created_at && (
+            {formattedDate && (
               <View className="flex-row items-center gap-1">
                 <Icon as={ClockIcon} size="xs" />
                 <ThemedText
@@ -62,7 +73,7 @@ export function OrderCard({ order, onPress }: OrderCardProps) {
                     fontSize: 12,
                   }}
                 >
-                  {format(new Date(order.created_at), "MMM dd yyyy, HH:mm")}
+                  {formattedDate}
                 </ThemedText>
               </View>
             )}
@@ -71,4 +82,4 @@ export function OrderCard({ order, onPress }: OrderCardProps) {
       </View>
     </TouchableOpacity>
   );
-}
+});

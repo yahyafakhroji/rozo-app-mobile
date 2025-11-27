@@ -1,20 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useGetDeposit } from "@/modules/api/api/merchant/deposits";
 import type { PaymentCompletedEvent } from "@/modules/pusher/pusher";
 import {
-    subscribeToChannel,
-    unsubscribeFromChannel,
+  subscribeToChannel,
+  unsubscribeFromChannel,
 } from "@/modules/pusher/pusher";
 
 type PaymentStatus = "pending" | "completed" | "failed";
 
 /**
- * Hook to subscribe to payment status updates via Pusher
- * Works with both web (pusher-js) and native (@pusher/pusher-websocket-react-native) platforms
+ * Hook to subscribe to deposit status updates via Pusher
  */
 export function useDepositStatus(merchantId?: string, depositId?: string) {
   const [status, setStatus] = useState<PaymentStatus>("pending");
+
+  // Track if component is mounted to prevent state updates after unmount
+  const isMountedRef = useRef(true);
 
   const {
     refetch: refetchDeposit,
@@ -26,13 +28,15 @@ export function useDepositStatus(merchantId?: string, depositId?: string) {
   });
 
   // Function to manually check payment status
-  const checkPaymentStatus = () => {
+  const checkPaymentStatus = useCallback(() => {
     if (depositId) {
       refetchDeposit();
     }
-  };
+  }, [depositId, refetchDeposit]);
 
   useEffect(() => {
+    isMountedRef.current = true;
+
     // Only subscribe if we have a merchantId and depositId
     if (!merchantId || !depositId) return;
 
@@ -41,44 +45,35 @@ export function useDepositStatus(merchantId?: string, depositId?: string) {
     // Setup Pusher channel and event binding
     const setupPusher = async () => {
       try {
-        // Subscribe to the channel with event handler for payment_completed event
-        // The subscribeToChannel function handles platform differences internally
         await subscribeToChannel(
           channelName,
           "payment_completed",
           (data: PaymentCompletedEvent) => {
-            if (data.order_id === depositId) {
+            if (data.order_id === depositId && isMountedRef.current) {
               setStatus("completed");
-              console.log(`Payment completed for deposit ${depositId}`);
             }
           }
         );
-
-        console.log(`Subscribed to ${channelName} channel on native platform`);
-      } catch (error) {
-        console.error("Error setting up Pusher:", error);
+      } catch {
+        // Silently handle subscription errors
       }
     };
 
-    setupPusher();
+    void setupPusher();
 
     // Cleanup function
     return () => {
-      setStatus("pending"); // Reset status when unmounted
+      isMountedRef.current = false;
+      setStatus("pending");
 
-      if (channelName) {
-        // Unsubscribe from channel
-        const cleanup = async () => {
-          try {
-            await unsubscribeFromChannel(channelName);
-            console.log(`Unsubscribed from ${channelName} channel`);
-          } catch (error) {
-            console.error("Error cleaning up Pusher:", error);
-          }
-        };
-
-        cleanup();
-      }
+      // Use void to explicitly mark fire-and-forget async cleanup
+      void (async () => {
+        try {
+          await unsubscribeFromChannel(channelName);
+        } catch {
+          // Silently handle cleanup errors
+        }
+      })();
     };
   }, [merchantId, depositId]);
 
@@ -97,6 +92,6 @@ export function useDepositStatus(merchantId?: string, depositId?: string) {
       isCompleted: status === "completed",
       isFailed: status === "failed",
     }),
-    [status, isDepositLoading]
+    [status, isDepositLoading, checkPaymentStatus]
   );
 }

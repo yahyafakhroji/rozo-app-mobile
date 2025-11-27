@@ -1,7 +1,6 @@
 import * as Speech from "expo-speech";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Platform } from "react-native";
 
 import { useGetOrder } from "@/modules/api/api/merchant/orders";
 import type { PaymentCompletedEvent } from "@/modules/pusher/pusher";
@@ -14,12 +13,13 @@ type PaymentStatus = "pending" | "completed" | "failed";
 
 /**
  * Hook to subscribe to payment status updates via Pusher
- * Works with both web (pusher-js) and native (@pusher/pusher-websocket-react-native) platforms
  */
 export function usePaymentStatus(merchantId?: string, orderId?: string) {
   const [status, setStatus] = useState<PaymentStatus>("pending");
-  const isWeb = Platform.OS === "web";
   const { t } = useTranslation();
+
+  // Track if component is mounted to prevent state updates after unmount
+  const isMountedRef = useRef(true);
 
   const { refetch, data, isLoading } = useGetOrder({
     variables: { id: orderId ?? "" },
@@ -27,48 +27,50 @@ export function usePaymentStatus(merchantId?: string, orderId?: string) {
   });
 
   // Function to manually check payment status
-  const checkPaymentStatus = () => {
+  const checkPaymentStatus = useCallback(() => {
     if (orderId) {
       refetch();
     }
-  };
+  }, [orderId, refetch]);
 
-  const unsubscribe = async () => {
+  const unsubscribe = useCallback(async () => {
+    if (!merchantId) return;
     try {
-      if (!merchantId) return;
-
-      const channelName = merchantId;
-      await unsubscribeFromChannel(channelName);
-      console.log(`Unsubscribed from ${channelName} channel`);
-    } catch (error) {
-      console.error("Error cleaning up Pusher:", error);
+      await unsubscribeFromChannel(merchantId);
+    } catch {
+      // Silently handle cleanup errors
     }
-  };
+  }, [merchantId]);
 
-  const speakPaymentStatus = async ({
-    amount,
-    currency,
-    language,
-    onEnd,
-  }: {
-    amount: number;
-    currency: string;
-    language: string;
-    onEnd?: () => void;
-  }) => {
-    const thingToSay = t("payment.voiceSuccess", {
-      amount: amount,
-      currency: currency,
-    });
-    Speech.speak(thingToSay, {
-      language: language,
-      pitch: 0.8,
-      rate: 0.8,
-      onDone: onEnd,
-    });
-  };
+  const speakPaymentStatus = useCallback(
+    ({
+      amount,
+      currency,
+      language,
+      onEnd,
+    }: {
+      amount: number;
+      currency: string;
+      language: string;
+      onEnd?: () => void;
+    }) => {
+      const thingToSay = t("payment.voiceSuccess", {
+        amount: amount,
+        currency: currency,
+      });
+      Speech.speak(thingToSay, {
+        language: language,
+        pitch: 0.8,
+        rate: 0.8,
+        onDone: onEnd,
+      });
+    },
+    [t]
+  );
 
   useEffect(() => {
+    isMountedRef.current = true;
+
     // Only subscribe if we have a merchantId and orderId
     if (!merchantId || !orderId) return;
 
@@ -77,50 +79,37 @@ export function usePaymentStatus(merchantId?: string, orderId?: string) {
     // Setup Pusher channel and event binding
     const setupPusher = async () => {
       try {
-        // Subscribe to the channel with event handler for payment_completed event
-        // The subscribeToChannel function handles platform differences internally
         await subscribeToChannel(
           channelName,
           "payment_completed",
           (data: PaymentCompletedEvent) => {
-            if (data.order_id === orderId) {
+            if (data.order_id === orderId && isMountedRef.current) {
               setStatus("completed");
-              console.log(`Payment completed for order ${orderId}`);
             }
           }
         );
-
-        console.log(
-          `Subscribed to ${channelName} channel on ${
-            isWeb ? "web" : "native"
-          } platform`
-        );
-      } catch (error) {
-        console.error("Error setting up Pusher:", error);
+      } catch {
+        // Silently handle subscription errors
       }
     };
 
-    setupPusher();
+    void setupPusher();
 
     // Cleanup function
     return () => {
-      setStatus("pending"); // Reset status when unmounted
+      isMountedRef.current = false;
+      setStatus("pending");
 
-      if (channelName) {
-        // Unsubscribe from channel
-        const cleanup = async () => {
-          try {
-            await unsubscribeFromChannel(channelName);
-            console.log(`Unsubscribed from ${channelName} channel`);
-          } catch (error) {
-            console.error("Error cleaning up Pusher:", error);
-          }
-        };
-
-        cleanup();
-      }
+      // Use void to explicitly mark fire-and-forget async cleanup
+      void (async () => {
+        try {
+          await unsubscribeFromChannel(channelName);
+        } catch {
+          // Silently handle cleanup errors
+        }
+      })();
     };
-  }, [merchantId, orderId, isWeb]);
+  }, [merchantId, orderId]);
 
   useEffect(() => {
     if (data && data.status === "COMPLETED") {
@@ -131,7 +120,7 @@ export function usePaymentStatus(merchantId?: string, orderId?: string) {
   return useMemo(
     () => ({
       status,
-      isLoading: isLoading,
+      isLoading,
       checkPaymentStatus,
       speakPaymentStatus,
       unsubscribe,
@@ -139,6 +128,6 @@ export function usePaymentStatus(merchantId?: string, orderId?: string) {
       isCompleted: status === "completed",
       isFailed: status === "failed",
     }),
-    [status, isLoading]
+    [status, isLoading, checkPaymentStatus, speakPaymentStatus, unsubscribe]
   );
 }
