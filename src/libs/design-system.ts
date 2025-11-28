@@ -181,3 +181,65 @@ export const inputConfig = {
   paddingHorizontal: 16,
   fontSize: 16,
 } as const;
+
+/**
+ * Wallet-specific color configurations
+ * For transaction types and wallet actions
+ */
+export const walletColors = {
+  receive: {
+    bg: "bg-success-100 dark:bg-success-900/30",
+    icon: "text-success-600 dark:text-success-400",
+    text: "text-success-600 dark:text-success-400",
+    button: "bg-success-500 active:bg-success-600",
+  },
+  send: {
+    bg: "bg-error-100 dark:bg-error-900/30",
+    icon: "text-error-600 dark:text-error-400",
+    text: "text-error-600 dark:text-error-400",
+    button: "bg-primary-500 active:bg-primary-600",
+  },
+  swap: {
+    bg: "bg-info-100 dark:bg-info-900/30",
+    icon: "text-info-600 dark:text-info-400",
+    text: "text-info-600 dark:text-info-400",
+    button: "bg-info-500 active:bg-info-600",
+  },
+  pending: {
+    bg: "bg-warning-100 dark:bg-warning-900/30",
+    icon: "text-warning-600 dark:text-warning-400",
+    text: "text-warning-600 dark:text-warning-400",
+  },
+} as const;
+
+/**
+ * Balance display configuration
+ */
+export const balanceConfig = {
+  /** Hero balance text size */
+  heroSize: "5xl" as const,
+  /** Asset symbol text size */
+  assetSize: "xl" as const,
+  /** Secondary balance text size */
+  secondarySize: "sm" as const,
+  /** Address chip border radius */
+  addressChipRadius: 9999,
+  /** Action button height */
+  actionButtonHeight: 56,
+  /** Action button border radius */
+  actionButtonRadius: 16,
+} as const;
+
+/**
+ * Transaction card configuration
+ */
+export const transactionConfig = {
+  /** Icon container size */
+  iconSize: 40,
+  /** Icon border radius */
+  iconRadius: 20,
+  /** Card padding */
+  padding: 16,
+  /** Card border radius */
+  borderRadius: 16,
+} as const;

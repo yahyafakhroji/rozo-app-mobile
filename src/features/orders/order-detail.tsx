@@ -11,7 +11,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRCode from "react-qr-code";
 
 import CheckSvg from "@/components/svg/check";
-import { ThemedText } from "@/components/themed-text";
 import {
   Actionsheet,
   ActionsheetBackdrop,
@@ -120,20 +119,20 @@ export const OrderDetailActionSheet = forwardRef<
           {isLoading ? (
             <View className="items-center justify-center py-8">
               <Spinner size="large" />
-              <ThemedText className="mt-2" type="default">
+              <Text className="mt-2 text-typography-900 dark:text-typography-100">
                 {t("general.loading")}
-              </ThemedText>
+              </Text>
             </View>
           ) : order ? (
             <>
               {/* Header */}
               <View className="items-center">
-                <Heading size="lg" className="text-typography-950">
+                <Heading size="lg" className="text-typography-950 dark:text-typography-50">
                   {t("order.orderDetails")}
                 </Heading>
-                <ThemedText className="text-sm" type="default">
+                <Text size="sm" className="text-typography-500 dark:text-typography-400">
                   #{order.number ?? getShortId(order.order_id, 6)}
-                </ThemedText>
+                </Text>
               </View>
 
               {order.status === "COMPLETED" && (

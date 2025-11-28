@@ -2,11 +2,15 @@ import { format } from "date-fns";
 import { ClockIcon } from "lucide-react-native";
 import React, { memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { TouchableOpacity, View } from "react-native";
+import { View } from "react-native";
 
-import { ThemedText } from "@/components/themed-text";
 import { Badge, BadgeText } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { HStack } from "@/components/ui/hstack";
 import { Icon } from "@/components/ui/icon";
+import { Pressable } from "@/components/ui/pressable";
+import { Text } from "@/components/ui/text";
+import { VStack } from "@/components/ui/vstack";
 import { getShortId, getStatusActionType } from "@/libs/utils";
 import { type MerchantOrder } from "@/modules/api/schema/order";
 
@@ -15,71 +19,69 @@ interface OrderCardProps {
   onPress?: (order: MerchantOrder) => void;
 }
 
-// Memoized to prevent re-renders when parent list re-renders
 export const OrderCard = memo(function OrderCard({
   order,
   onPress,
 }: OrderCardProps) {
   const { t } = useTranslation();
 
-  // Memoize date formatting to avoid recalculation
   const formattedDate = useMemo(() => {
     if (!order.created_at) return null;
     return format(new Date(order.created_at), "MMM dd yyyy, HH:mm");
   }, [order.created_at]);
 
   return (
-    <TouchableOpacity activeOpacity={0.7} onPress={() => onPress?.(order)}>
-      <View
-        className="items-start justify-between rounded-xl border border-background-300 bg-background-0"
-        style={{
-          paddingInline: 12,
-          paddingVertical: 8,
-        }}
-      >
-        {/* Main Order Info */}
-        <View className="w-full flex-row items-start justify-between">
-          <View className="flex flex-1 flex-col gap-1.5">
-            <View className="flex-row items-center justify-between">
-              <ThemedText
-                className="text-sm font-medium"
-                style={{
-                  color: "gray",
-                }}
-              >
-                #{order.number ?? getShortId(order.order_id, 6)}
-              </ThemedText>
+    <Pressable
+      onPress={() => onPress?.(order)}
+      className="active:opacity-80"
+    >
+      <Card className="rounded-xl border border-background-300 dark:border-background-700 bg-background-0 dark:bg-background-900 p-3">
+        <VStack space="sm">
+          {/* Header Row - Order ID & Status */}
+          <HStack className="items-center justify-between">
+            <Text
+              size="sm"
+              className="font-medium text-typography-500 dark:text-typography-400"
+            >
+              #{order.number ?? getShortId(order.order_id, 6)}
+            </Text>
+            <Badge
+              size="md"
+              variant="solid"
+              action={getStatusActionType(order.status)}
+            >
+              <BadgeText>
+                {t(`order.status.${order.status.toLowerCase()}`)}
+              </BadgeText>
+            </Badge>
+          </HStack>
 
-              <Badge
-                size="md"
-                variant="solid"
-                action={getStatusActionType(order.status)}
+          {/* Amount */}
+          <Text
+            size="2xl"
+            className="font-bold text-typography-900 dark:text-typography-100"
+          >
+            {order.display_amount} {order.display_currency}
+          </Text>
+
+          {/* Timestamp */}
+          {formattedDate && (
+            <HStack space="xs" className="items-center">
+              <Icon
+                as={ClockIcon}
+                size="xs"
+                className="text-typography-400 dark:text-typography-500"
+              />
+              <Text
+                size="xs"
+                className="text-typography-400 dark:text-typography-500"
               >
-                <BadgeText>
-                  {t(`order.status.${order.status.toLowerCase()}`)}
-                </BadgeText>
-              </Badge>
-            </View>
-            <ThemedText className="text-2xl font-bold" type="default">
-              {order.display_amount} {order.display_currency}
-            </ThemedText>
-            {formattedDate && (
-              <View className="flex-row items-center gap-1">
-                <Icon as={ClockIcon} size="xs" />
-                <ThemedText
-                  type="default"
-                  style={{
-                    color: "gray",
-                    fontSize: 12,
-                  }}
-                >
-                  {formattedDate}
-                </ThemedText>
-              </View>
-            )}
-          </View>
-        </View>
-      </View>
-    </TouchableOpacity>
+                {formattedDate}
+              </Text>
+            </HStack>
+          )}
+        </VStack>
+      </Card>
+    </Pressable>
   );
 });

@@ -4,10 +4,9 @@ import { useTranslation } from "react-i18next";
 import { CurrencyConverter } from "@/components/currency-converter";
 import { Box } from "@/components/ui/box";
 import { Card } from "@/components/ui/card";
+import { Text } from "@/components/ui/text";
+import { VStack } from "@/components/ui/vstack";
 import { useApp } from "@/providers/app.provider";
-
-import { ThemedText } from "@/components/themed-text";
-import { useSelectedTheme } from "@/hooks/use-selected-theme";
 import type { DynamicStyles } from "./types";
 
 type AmountDisplayProps = {
@@ -18,7 +17,6 @@ type AmountDisplayProps = {
 export function AmountDisplay({ amount, dynamicStyles }: AmountDisplayProps) {
   const { defaultCurrency } = useApp();
   const { t } = useTranslation();
-  const { selectedTheme } = useSelectedTheme();
 
   // Format amount with appropriate decimal and thousand separators
   const formattedAmount = useMemo(() => {
@@ -52,41 +50,37 @@ export function AmountDisplay({ amount, dynamicStyles }: AmountDisplayProps) {
 
   return (
     <Card
-      className={`rounded-xl shadow-soft-1 ${dynamicStyles.spacing.cardPadding}`}
-      style={{
-        backgroundColor: selectedTheme === "dark" ? "#0a0a0a" : "#ffffff",
-        borderColor: selectedTheme === "dark" ? "#222430" : "gray",
-        borderWidth: 1,
-      }}
+      className={`rounded-xl border border-background-300 dark:border-background-700 bg-background-0 dark:bg-background-900 ${dynamicStyles.spacing.cardPadding}`}
     >
-      <ThemedText className="text-center">{t("general.amount")}</ThemedText>
-      <ThemedText
-        style={{
-          fontSize: 24,
-          fontWeight: "bold",
-          marginTop: 12,
-          marginBottom: 12,
-        }}
-        className={`text-center ${dynamicStyles.fontSize.amount}`}
-      >
-        {`${formattedAmount} ${defaultCurrency?.code}`}
-      </ThemedText>
-      {/* USD Conversion */}
-      {defaultCurrency?.code !== "USD" && (
-        <Box className="rounded-lg p-2">
-          <CurrencyConverter
-            amount={Number(amount)}
-            className={`text-center`}
-          />
-        </Box>
-      )}
-      <ThemedText
-        className={`text-center italic ${dynamicStyles.fontSize.label}`}
-        type="default"
-        style={{ fontSize: 14, marginTop: 12 }}
-      >
-        {t("payment.enterPaymentAmount")}
-      </ThemedText>
+      <VStack space="sm" className="items-center">
+        <Text
+          size="sm"
+          className="text-typography-500 dark:text-typography-400 text-center"
+        >
+          {t("general.amount")}
+        </Text>
+        <Text
+          size="3xl"
+          className={`font-bold text-typography-900 dark:text-typography-100 text-center ${dynamicStyles.fontSize.amount}`}
+        >
+          {`${formattedAmount} ${defaultCurrency?.code}`}
+        </Text>
+        {/* USD Conversion */}
+        {defaultCurrency?.code !== "USD" && (
+          <Box className="rounded-lg p-2">
+            <CurrencyConverter
+              amount={Number(amount)}
+              className="text-center"
+            />
+          </Box>
+        )}
+        <Text
+          size="sm"
+          className="text-typography-400 dark:text-typography-500 text-center italic mt-2"
+        >
+          {t("payment.enterPaymentAmount")}
+        </Text>
+      </VStack>
     </Card>
   );
 }

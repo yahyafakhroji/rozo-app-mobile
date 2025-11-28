@@ -3,9 +3,11 @@ import React from "react";
 import { Alert } from "react-native";
 
 import { FocusAwareStatusBar } from "@/components/focus-aware-status-bar";
-import { ThemedText } from "@/components/themed-text";
 import { Button, ButtonText } from "@/components/ui/button";
+import { Heading } from "@/components/ui/heading";
+import { Text } from "@/components/ui/text";
 import { View } from "@/components/ui/view";
+import { VStack } from "@/components/ui/vstack";
 
 type ErrorScreenProps = {
   message?: string;
@@ -38,24 +40,30 @@ export default function ErrorScreen({
     <>
       <FocusAwareStatusBar />
       <Stack.Screen options={{ title: "Error", headerShown: false }} />
-      <View className="flex-1 items-center justify-center bg-white p-6">
-        <ThemedText className="mb-2 text-center text-2xl font-bold">
-          Oops!
-        </ThemedText>
-        <ThemedText className="mb-8 text-center text-base text-gray-600">
-          {message}
-        </ThemedText>
-        <View className="w-full gap-4">
+      <View className="flex-1 items-center justify-center bg-background-0 dark:bg-background-950 p-6">
+        <VStack space="md" className="items-center w-full">
+          <Heading
+            size="2xl"
+            className="text-typography-900 dark:text-typography-100 text-center"
+          >
+            Oops!
+          </Heading>
+          <Text
+            size="md"
+            className="text-typography-500 dark:text-typography-400 text-center mb-6"
+          >
+            {message}
+          </Text>
           <Button
             onPress={handleReload}
             variant="solid"
-            size="xs"
+            size="lg"
             action="primary"
-            className="mb-3"
+            className="w-full rounded-xl"
           >
             <ButtonText>Reload Application</ButtonText>
           </Button>
-        </View>
+        </VStack>
       </View>
     </>
   );

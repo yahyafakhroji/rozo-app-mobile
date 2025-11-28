@@ -2,7 +2,6 @@ import { memo, useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { RefreshControl, ScrollView, View } from "react-native";
 
-import { Card } from "@/components/ui/card";
 import { VStack } from "@/components/ui/vstack";
 import { useToast } from "@/hooks/use-toast";
 import { useWalletBalance } from "@/hooks/use-wallet-balance";
@@ -55,6 +54,12 @@ export const BalanceScreen = memo(function BalanceScreen() {
     transactionsRef.current?.refresh();
   }, [refetch]);
 
+  // Quick action handlers
+  const handleQRPress = useCallback(() => {
+    // Open receive sheet with QR code
+    depositDialogRef.current?.open();
+  }, []);
+
   return (
     <>
       <ScrollView
@@ -66,27 +71,19 @@ export const BalanceScreen = memo(function BalanceScreen() {
         showsVerticalScrollIndicator={false}
       >
         <VStack space="lg">
-          {/* Logo Header */}
-          <BalanceHeader />
+          {/* Header with Logo & Quick Actions */}
+          <BalanceHeader onQRPress={handleQRPress} />
 
-          {/* Balance Card with Actions */}
-          <Card className="rounded-xl border border-background-300 dark:border-background-700 bg-background-0 dark:bg-background-900 overflow-hidden">
-            {/* Balance Info */}
-            <BalanceInfo isLoading={isLoading} />
+          {/* Hero Balance Section - Not inside a card */}
+          <BalanceInfo isLoading={isLoading} onRefresh={handleBalanceRefresh} />
 
-            {/* Divider */}
-            <View className="h-px bg-background-200 dark:bg-background-700 mx-4" />
+          {/* Action Buttons - Prominent CTAs */}
+          <BalanceActions
+            onReceivePress={handleReceivePress}
+            onWithdrawPress={handleWithdrawPress}
+          />
 
-            {/* Action Buttons */}
-            <View className="p-4">
-              <BalanceActions
-                onReceivePress={handleReceivePress}
-                onWithdrawPress={handleWithdrawPress}
-              />
-            </View>
-          </Card>
-
-          {/* Transaction List */}
+          {/* Recent Transactions */}
           <BalanceTransactions ref={transactionsRef} />
         </VStack>
       </ScrollView>

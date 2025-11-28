@@ -3,9 +3,9 @@ import { LoadingScreen } from "@/components/loading-screen";
 import { ProtectedByPrivyLogo } from "@/components/protected-by-privy-logo";
 import LogoSvg from "@/components/svg/logo";
 import LogoWhiteSvg from "@/components/svg/logo-white";
-import { ThemedText } from "@/components/themed-text";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonSpinner, ButtonText } from "@/components/ui/button";
+import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import {
   Input,
@@ -14,6 +14,7 @@ import {
   InputSlot,
 } from "@/components/ui/input";
 import { Modal, ModalBackdrop, ModalBody, ModalContent } from "@/components/ui/modal";
+import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { ActionSheetLanguageSwitcher } from "@/features/settings/select-language";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -195,12 +196,12 @@ export default function LoginScreen() {
 
               {/* Title and subtitle */}
               <VStack space="sm" className="items-center">
-                <ThemedText type="title" className="text-center">
+                <Heading size="xl" className="text-typography-900 dark:text-typography-100 text-center">
                   {t("invitation.title")}
-                </ThemedText>
-                <ThemedText type="default" className="text-center">
+                </Heading>
+                <Text size="sm" className="text-typography-500 dark:text-typography-400 text-center">
                   {t("invitation.subtitle")}
-                </ThemedText>
+                </Text>
               </VStack>
 
               {/* Input field */}
@@ -256,14 +257,11 @@ export default function LoginScreen() {
 
               {/* Divider */}
               <HStack space="md" className="w-full items-center justify-center">
-                <Box className="h-px flex-1 bg-neutral-200 dark:bg-neutral-700" />
-                <ThemedText
-                  style={{ fontSize: 14, color: "#747474" }}
-                  className="px-2"
-                >
+                <Box className="h-px flex-1 bg-background-200 dark:bg-background-700" />
+                <Text size="sm" className="text-typography-400 dark:text-typography-500 px-2">
                   {t("invitation.or")}
-                </ThemedText>
-                <Box className="h-px flex-1 bg-neutral-200 dark:bg-neutral-700" />
+                </Text>
+                <Box className="h-px flex-1 bg-background-200 dark:bg-background-700" />
               </HStack>
 
               {/* Join waitlist button */}
@@ -283,21 +281,23 @@ export default function LoginScreen() {
       </Modal>
 
       {/* Main login content */}
-      <Box className="flex-1 items-center justify-center bg-white px-6 dark:bg-neutral-900">
+      <Box className="flex-1 items-center justify-center bg-background-0 dark:bg-background-950 px-6">
         {/* Logo and title section */}
-        <Box className="mb-6 w-full items-center justify-center">
+        <VStack space="md" className="mb-6 w-full items-center justify-center">
           {colorScheme === "dark" ? (
             <LogoWhiteSvg width={100} height={100} />
           ) : (
             <LogoSvg width={100} height={100} />
           )}
 
-          <ThemedText type="title">ROZO</ThemedText>
+          <Heading size="3xl" className="text-typography-900 dark:text-typography-100">
+            ROZO
+          </Heading>
 
-          <ThemedText type="default" className="text-center mt-4">
+          <Text size="md" className="text-typography-500 dark:text-typography-400 text-center">
             {t("login.description")}
-          </ThemedText>
-        </Box>
+          </Text>
+        </VStack>
 
         {/* Button section */}
         <Button
@@ -330,9 +330,9 @@ export default function LoginScreen() {
 
         {/* App version */}
         <Box className="mt-6 w-full items-center justify-center">
-          <ThemedText style={{ fontSize: 14, color: "#747474" }}>
+          <Text size="sm" className="text-typography-400 dark:text-typography-500">
             Version {Application.nativeApplicationVersion}
-          </ThemedText>
+          </Text>
         </Box>
       </Box>
     </>

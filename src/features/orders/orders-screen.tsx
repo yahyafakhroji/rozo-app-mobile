@@ -2,7 +2,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next";
 import { FlatList, RefreshControl, View } from "react-native";
 
+import { Heading } from "@/components/ui/heading";
 import { Spinner } from "@/components/ui/spinner";
+import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useGetOrders } from "@/modules/api/api/merchant/orders";
 import {
@@ -10,7 +12,6 @@ import {
   type MerchantOrderStatus,
 } from "@/modules/api/schema/order";
 
-import { ThemedText } from "@/components/themed-text";
 import EmptyOrdersState from "./empty-orders";
 import { FilterOrderActionSheet } from "./filter-order";
 import { OrderCard } from "./order-card";
@@ -73,12 +74,12 @@ export function OrdersScreen() {
     () => (
       <VStack className="flex flex-row items-start justify-between py-6">
         <View className="mb-6">
-          <ThemedText style={{ fontSize: 24, fontWeight: "bold" }}>
+          <Heading size="xl" className="text-typography-900 dark:text-typography-100">
             {t("order.recentOrders")}
-          </ThemedText>
-          <ThemedText style={{ fontSize: 14, color: "#6B7280" }} type="default">
+          </Heading>
+          <Text size="sm" className="text-typography-500 dark:text-typography-400 mt-1">
             {t("order.recentOrdersDesc")}
-          </ThemedText>
+          </Text>
         </View>
         <FilterOrderActionSheet onStatusChange={handleStatusChange} />
       </VStack>

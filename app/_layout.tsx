@@ -21,9 +21,9 @@ import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
 
 import { PrivyReady } from "@/components/privy-ready";
-import { ThemedText } from "@/components/themed-text";
 import { Text } from "@/components/ui/text";
 import { View } from "@/components/ui/view";
+import { VStack } from "@/components/ui/vstack";
 import { NotificationProvider } from "@/modules/notifications";
 import { AppProvider } from "@/providers/app.provider";
 import { usePOSToggle } from "@/providers/preferences.provider";
@@ -164,22 +164,21 @@ export default function RootLayout() {
 
 function ErrorFallback({ error }: { error: Error }) {
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        padding: 20,
-      }}
-    >
-      <ThemedText
-        style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}
-      >
-        Something went wrong:
-      </ThemedText>
-      <ThemedText style={{ color: "red", textAlign: "center" }}>
-        {error.message}
-      </ThemedText>
+    <View className="flex-1 items-center justify-center p-5 bg-background-0 dark:bg-background-950">
+      <VStack space="md" className="items-center">
+        <Text
+          size="lg"
+          className="font-bold text-typography-900 dark:text-typography-100"
+        >
+          Something went wrong:
+        </Text>
+        <Text
+          size="sm"
+          className="text-error-500 text-center"
+        >
+          {error.message}
+        </Text>
+      </VStack>
     </View>
   );
 }
