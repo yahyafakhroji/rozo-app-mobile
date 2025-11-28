@@ -1,7 +1,8 @@
 import { LoadingScreen } from "@/components/loading-screen";
-import { ThemedText } from "@/components/themed-text";
 import { Icon } from "@/components/ui/icon";
+import { Text } from "@/components/ui/text";
 import { cn } from "@/libs/utils";
+import { rawColors, tabBarConfig } from "@/libs/design-system";
 import { useAuth, useMerchant, useWallet } from "@/providers";
 import { usePOSToggle } from "@/providers/preferences.provider";
 import { AuthBoundary } from "@privy-io/expo";
@@ -16,16 +17,21 @@ import { useColorScheme } from "nativewind";
 import type React from "react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { Platform, View } from "react-native";
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import { spacing } from "@/libs/responsive";
 
 export default function TabLayout() {
-  const theme = useColorScheme();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { showPOS } = usePOSToggle();
+
+  const colors = isDark ? rawColors.dark : rawColors.light;
 
   return (
     <AuthBoundary
@@ -38,24 +44,37 @@ export default function TabLayout() {
             screenOptions={{
               headerShown: false,
               tabBarStyle: {
-                // height: 64,
-                paddingTop: 6,
-                paddingBottom: 10,
-                marginBottom: insets.bottom,
-                backgroundColor:
-                  theme?.colorScheme === "dark" ? "#222430" : "#FFFFFF",
-                elevation: 0,
-                shadowOpacity: 0.5,
-                borderTopColor:
-                  theme?.colorScheme === "dark" ? "#222430" : "#E5E7EB",
+                position: "absolute",
+                bottom: Math.max(insets.bottom, spacing.lg),
+                left: spacing.lg,
+                right: spacing.lg,
+                height: tabBarConfig.height,
+                backgroundColor: colors.tabBar,
+                borderRadius: tabBarConfig.borderRadius,
+                borderTopWidth: 0,
+                elevation: 8,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: isDark ? 0.3 : 0.15,
+                shadowRadius: 12,
+                paddingBottom: 0,
+                paddingTop: 0,
+                // Border for light mode
+                ...(isDark
+                  ? {}
+                  : {
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                    }),
               },
-              tabBarActiveTintColor:
-                theme?.colorScheme === "dark" ? "white" : "#0a0a0a",
-              tabBarInactiveTintColor: "gray", // Gray-500
+              tabBarItemStyle: {
+                paddingVertical: tabBarConfig.topPadding,
+              },
+              tabBarActiveTintColor: isDark ? "#FFFFFF" : "#0a0a0a",
+              tabBarInactiveTintColor: isDark ? "#6B7280" : "#9CA3AF",
               tabBarIconStyle: {
-                marginBottom: -4,
+                marginBottom: 2,
               },
-              tabBarAllowFontScaling: true,
               animation: "fade" as const,
               tabBarLabelPosition: "below-icon",
               tabBarLabel: ({
@@ -67,22 +86,27 @@ export default function TabLayout() {
                 color: string;
                 focused: boolean;
               }) => (
-                <ThemedText
+                <Text
                   className={cn(
-                    "text-sm font-medium",
-                    focused && `font-semibold`
+                    "text-center",
+                    focused ? "font-semibold" : "font-medium"
                   )}
-                  style={{ color, fontSize: 12 }}
+                  style={{
+                    color,
+                    fontSize: tabBarConfig.labelSize,
+                    marginTop: -2,
+                  }}
                 >
                   {children}
-                </ThemedText>
+                </Text>
               ),
               sceneStyle: {
-                paddingTop: insets.top,
-                paddingLeft: insets.left + 16,
-                paddingRight: insets.right + 16,
-                backgroundColor:
-                  theme?.colorScheme === "dark" ? "#141419" : "#f8f8ff",
+                paddingTop: insets.top + spacing.md,
+                paddingLeft: insets.left + spacing.lg,
+                paddingRight: insets.right + spacing.lg,
+                // Add bottom padding to account for floating tab bar
+                paddingBottom: tabBarConfig.height + Math.max(insets.bottom, spacing.lg) + spacing.lg,
+                backgroundColor: colors.backgroundSecondary,
               },
             }}
           >
@@ -91,8 +115,23 @@ export default function TabLayout() {
               name="balance"
               options={{
                 title: t("balance.title"),
-                tabBarIcon: ({ color }: any) => (
-                  <Icon as={Coins} size="md" color={color} />
+                tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
+                  <View
+                    className={cn(
+                      "items-center justify-center rounded-xl",
+                      focused && "bg-primary-500/10 dark:bg-primary-400/10"
+                    )}
+                    style={{
+                      width: 40,
+                      height: 32,
+                    }}
+                  >
+                    <Icon
+                      as={Coins}
+                      size="md"
+                      style={{ color }}
+                    />
+                  </View>
                 ),
                 tabBarButtonTestID: "balance-tab",
               }}
@@ -105,8 +144,23 @@ export default function TabLayout() {
                 showPOS
                   ? {
                       title: t("pos.title"),
-                      tabBarIcon: ({ color }: any) => (
-                        <Icon as={ShoppingCartIcon} size="md" color={color} />
+                      tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
+                        <View
+                          className={cn(
+                            "items-center justify-center rounded-xl",
+                            focused && "bg-primary-500/10 dark:bg-primary-400/10"
+                          )}
+                          style={{
+                            width: 40,
+                            height: 32,
+                          }}
+                        >
+                          <Icon
+                            as={ShoppingCartIcon}
+                            size="md"
+                            style={{ color }}
+                          />
+                        </View>
                       ),
                       tabBarButtonTestID: "pos-tab",
                     }
@@ -120,8 +174,23 @@ export default function TabLayout() {
               name="orders"
               options={{
                 title: t("order.title"),
-                tabBarIcon: ({ color }: any) => (
-                  <Icon as={ShoppingBagIcon} size="md" color={color} />
+                tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
+                  <View
+                    className={cn(
+                      "items-center justify-center rounded-xl",
+                      focused && "bg-primary-500/10 dark:bg-primary-400/10"
+                    )}
+                    style={{
+                      width: 40,
+                      height: 32,
+                    }}
+                  >
+                    <Icon
+                      as={ShoppingBagIcon}
+                      size="md"
+                      style={{ color }}
+                    />
+                  </View>
                 ),
                 tabBarButtonTestID: "orders-tab",
               }}
@@ -139,8 +208,23 @@ export default function TabLayout() {
               name="settings"
               options={{
                 title: t("settings.title"),
-                tabBarIcon: ({ color }: any) => (
-                  <Icon as={Settings2Icon} size="md" color={color} />
+                tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
+                  <View
+                    className={cn(
+                      "items-center justify-center rounded-xl",
+                      focused && "bg-primary-500/10 dark:bg-primary-400/10"
+                    )}
+                    style={{
+                      width: 40,
+                      height: 32,
+                    }}
+                  >
+                    <Icon
+                      as={Settings2Icon}
+                      size="md"
+                      style={{ color }}
+                    />
+                  </View>
                 ),
                 tabBarButtonTestID: "settings-tab",
               }}
