@@ -6,6 +6,29 @@ Welcome to the Rozo App Mobile documentation! This directory contains comprehens
 
 ## 📚 Available Documentation
 
+### Project Analysis
+
+#### **[PROJECT_ANALYSIS.md](./PROJECT_ANALYSIS.md)**
+
+Comprehensive technical analysis of the entire project architecture, dependencies, and patterns.
+
+**Topics Covered:**
+
+- 🏗️ Tech stack overview (Expo, React Native, Gluestack, NativeWind)
+- 📁 Project structure and organization
+- 🔌 Dependencies and their purposes
+- 🎯 Architecture patterns (providers, state management, API)
+- 💰 Key features (wallet, POS, transactions, settings)
+- 🎨 Styling system (Tailwind + NativeWind + Gluestack)
+- ⛓️ Blockchain networks (Base + Stellar)
+- 🔧 Configuration files explained
+- 🚀 Build & deployment instructions
+- 📝 Development guidelines
+
+**Best for:** New developers onboarding, understanding the overall architecture, and technical decision reference.
+
+---
+
 ### Toast System
 
 A centralized toast notification system built on `react-native-toastify` for displaying user notifications across the application.
@@ -103,6 +126,8 @@ Quick reference guide with real-world examples and code snippets.
 ```
 docs/
 ├── README.md (you are here)
+│
+├── PROJECT_ANALYSIS.md                  ← Project Architecture & Tech Stack
 │
 ├── Toast System
 │   └── TOAST_SYSTEM.md                  ← Complete Toast Guide

@@ -54,7 +54,7 @@ export const notificationConfig = {
   },
 
   // General notification settings
-  icon: "./assets/images/notification-icon.png",
+  icon: "./src/assets/images/notification-icon.png",
   color: "#FF6C44",
   priority: "high" as const,
 

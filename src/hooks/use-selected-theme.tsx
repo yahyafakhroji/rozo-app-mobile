@@ -1,36 +1,41 @@
-import { colorScheme, useColorScheme } from "nativewind";
 import { useCallback } from "react";
 import { useMMKVString } from "react-native-mmkv";
+import { Appearance } from "react-native";
 
 import { storage } from "@/libs/storage";
 
 const SELECTED_THEME = "_theme";
 export type ColorSchemeType = "light" | "dark" | "system";
+
 /**
- * this hooks should only be used while selecting the theme
- * This hooks will return the selected theme which is stored in MMKV
- * selectedTheme should be one of the following values 'light', 'dark' or 'system'
- * don't use this hooks if you want to use it to style your component based on the theme use useColorScheme from nativewind instead
+ * This hook should only be used for selecting/changing the theme.
+ * It stores the selected theme in MMKV and updates the system appearance.
  *
+ * For styling components based on the current theme, use useColorScheme from @/hooks/use-color-scheme
  */
 export const useSelectedTheme = () => {
-  const { colorScheme: _color, setColorScheme } = useColorScheme();
   const [theme, _setTheme] = useMMKVString(SELECTED_THEME, storage);
 
   const setSelectedTheme = useCallback(
     (t: ColorSchemeType) => {
-      setColorScheme(t);
       _setTheme(t);
+      // Update system appearance for immediate effect
+      if (t === "system") {
+        Appearance.setColorScheme(null);
+      } else {
+        Appearance.setColorScheme(t);
+      }
     },
-    [setColorScheme, _setTheme]
+    [_setTheme]
   );
 
   return { selectedTheme: theme, setSelectedTheme } as const;
 };
+
 // to be used in the root file to load the selected theme from MMKV
 export const loadSelectedTheme = () => {
   const theme = storage.getString(SELECTED_THEME);
-  if (theme !== undefined) {
-    colorScheme.set(theme as ColorSchemeType);
+  if (theme !== undefined && theme !== "system") {
+    Appearance.setColorScheme(theme as "light" | "dark");
   }
 };

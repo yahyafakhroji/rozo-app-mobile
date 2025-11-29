@@ -1,4 +1,4 @@
-import { useColorScheme } from "nativewind";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import React, { useMemo } from "react";
 import {
   Text,
@@ -27,7 +27,7 @@ export const NumPad: React.FC<NumPadProps> = ({
   buttonTextStyle,
   containerStyle,
 }) => {
-  const { colorScheme } = useColorScheme();
+  const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const colors = isDark ? rawColors.dark : rawColors.light;
 

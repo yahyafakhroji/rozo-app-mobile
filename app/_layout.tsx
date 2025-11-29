@@ -18,8 +18,9 @@ import {
 import { privyClient } from "@/libs/privy-client";
 
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
-import "@/global.css";
+import "../src/styles/global.css";
 
+import { LoadingScreen } from "@/components/loading-screen";
 import { PrivyReady } from "@/components/privy-ready";
 import { Text } from "@/components/ui/text";
 import { View } from "@/components/ui/view";
@@ -33,16 +34,17 @@ import {
   Inter_500Medium,
   Inter_600SemiBold,
 } from "@expo-google-fonts/inter";
+import { usePrivy } from "@privy-io/expo";
 import { PrivyElements } from "@privy-io/expo/ui";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import type { ReactNode } from "react";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { StyleSheet } from "react-native";
 
 export const unstable_settings = {
-  initialRouteName: "login",
+  initialRouteName: "(auth)",
 };
 
 // Set the animation options. This is optional.
@@ -84,7 +86,6 @@ export default function RootLayout() {
       <GluestackUIProvider mode="system">
         <GestureHandlerRootView
           style={styles.container}
-          className={colorScheme ? colorScheme : "light"}
           onLayout={onLayoutRootView}
         >
           <ThemeProvider
@@ -109,36 +110,7 @@ export default function RootLayout() {
                     <NotificationProvider>
                       <KeyboardProvider>
                         <RouteProtectionWrapper>
-                          <Stack>
-                            <Stack.Screen
-                              name="(main)"
-                              options={{ headerShown: false }}
-                            />
-                            <Stack.Screen
-                              name="login"
-                              options={{ headerShown: false }}
-                            />
-                            <Stack.Screen
-                              name="pos"
-                              options={{ headerShown: false }}
-                            />
-                            <Stack.Screen
-                              name="balance"
-                              options={{ headerShown: false }}
-                            />
-                            <Stack.Screen
-                              name="orders"
-                              options={{ headerShown: false }}
-                            />
-                            <Stack.Screen
-                              name="transactions"
-                              options={{ headerShown: false }}
-                            />
-                            <Stack.Screen
-                              name="settings"
-                              options={{ headerShown: false }}
-                            />
-                          </Stack>
+                          <AuthRouter />
                         </RouteProtectionWrapper>
                       </KeyboardProvider>
                     </NotificationProvider>
@@ -193,27 +165,54 @@ function RouteProtectionWrapper({ children }: { children: ReactNode }) {
   // Define protection rules
   const protectionRules: RouteProtectionRule[] = [
     {
-      paths: ["/(main)/pos", "/pos"],
+      paths: ["/(main)/(tabs)/pos"],
       condition: () => showPOS,
-      redirectTo: "/(main)/balance",
+      redirectTo: "/(main)/(tabs)",
       reason: "POS feature is disabled",
       onProtected: (pathname) => {
         console.log(`[Analytics] User attempted to access POS from: ${pathname}`);
       },
     },
-    // Add more protection rules here as needed
-    // Example:
-    // {
-    //   paths: ["/admin"],
-    //   condition: () => isAdmin,
-    //   redirectTo: "/(main)/balance",
-    //   reason: "Admin access required",
-    // },
   ];
 
   useRouteProtection(protectionRules);
 
   return <>{children}</>;
+}
+
+/**
+ * Auth router component that handles navigation based on auth state
+ */
+function AuthRouter() {
+  const { isReady, user } = usePrivy();
+  const segments = useSegments();
+  const router = useRouter();
+
+  const inAuthGroup = segments[0] === "(auth)";
+  const inMainGroup = segments[0] === "(main)";
+  const isAuthenticated = !!user;
+
+  useEffect(() => {
+    if (!isReady) return;
+
+    // Only redirect if we're in a defined group and auth state doesn't match
+    if (isAuthenticated && inAuthGroup) {
+      router.replace("/(main)/(tabs)");
+    } else if (!isAuthenticated && inMainGroup) {
+      router.replace("/(auth)/login");
+    }
+  }, [isReady, isAuthenticated, inAuthGroup, inMainGroup, router]);
+
+  if (!isReady) {
+    return <LoadingScreen />;
+  }
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(main)" />
+    </Stack>
+  );
 }
 
 const styles = StyleSheet.create({

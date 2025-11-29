@@ -6,7 +6,7 @@ import { Text } from "@/components/ui/text";
 import { HStack } from "@/components/ui/hstack";
 import { Icon } from "@/components/ui/icon";
 import { Pressable } from "@/components/ui/pressable";
-import { useColorScheme } from "nativewind";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 
 const logoSource = require("@/assets/images/icon.png");
 
@@ -19,7 +19,7 @@ export const BalanceHeader = memo(function BalanceHeader({
   onQRPress,
   onNotificationPress,
 }: BalanceHeaderProps) {
-  const { colorScheme } = useColorScheme();
+  const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
   return (

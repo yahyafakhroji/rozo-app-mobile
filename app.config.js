@@ -32,7 +32,7 @@ module.exports = {
     slug: "rozo-app-mobile",
     version: packageJson.version,
     orientation: "portrait",
-    icon: "./assets/images/icon.png",
+    icon: "./src/assets/images/icon.png",
     scheme: "rozo",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
@@ -58,8 +58,8 @@ module.exports = {
     android: {
       adaptiveIcon: {
         backgroundColor: "#ffffff",
-        foregroundImage: "./assets/images/playstore-icon.png",
-        backgroundImage: "./assets/images/playstore-icon.png",
+        foregroundImage: "./src/assets/images/playstore-icon.png",
+        backgroundImage: "./src/assets/images/playstore-icon.png",
       },
       versionCode: getVersionCode(packageJson.version),
       edgeToEdgeEnabled: true,
@@ -89,19 +89,19 @@ module.exports = {
     },
     web: {
       output: "static",
-      favicon: "./assets/images/favicon.png",
+      favicon: "./src/assets/images/favicon.png",
     },
     plugins: [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          image: "./assets/images/splash-light.png",
+          image: "./src/assets/images/splash-light.png",
           imageWidth: 200,
           resizeMode: "contain",
           backgroundColor: "#ffffff",
           dark: {
-            image: "./assets/images/splash-dark.png",
+            image: "./src/assets/images/splash-dark.png",
             backgroundColor: "#0a0a0a",
           },
         },
@@ -132,7 +132,7 @@ module.exports = {
       [
         "expo-notifications",
         {
-          icon: "./assets/images/notification-icon.png",
+          icon: "./src/assets/images/notification-icon.png",
           color: "#ffffff",
           defaultChannel: "rozo-notifications",
           sounds: [],

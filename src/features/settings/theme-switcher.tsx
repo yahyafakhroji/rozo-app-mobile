@@ -1,5 +1,5 @@
 import { CheckIcon, LaptopIcon, MoonIcon, Palette, SunIcon } from "lucide-react-native";
-import { useColorScheme } from "nativewind";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -34,7 +34,7 @@ export function ActionSheetThemeSwitcher({
 }) {
   const { t } = useTranslation();
   const { selectedTheme, setSelectedTheme } = useSelectedTheme();
-  const { colorScheme } = useColorScheme();
+  const colorScheme = useColorScheme();
   const insets = useSafeAreaInsets();
 
   const [showActionsheet, setShowActionsheet] = useState(false);

@@ -20,7 +20,7 @@ import { useTranslation } from "react-i18next";
 import { Keyboard } from "react-native";
 import { OtpInput } from "react-native-otp-entry";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useColorScheme } from "nativewind";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 
 export enum ValidationState {
   IDLE = "IDLE",
@@ -58,7 +58,7 @@ export const PINValidationInput: React.FC<PINValidationInputProps> = ({
   const { logout } = useApp();
   const insets = useSafeAreaInsets();
   const otpInputRef = useRef<any>(null);
-  const { colorScheme } = useColorScheme();
+  const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const colors = isDark ? rawColors.dark : rawColors.light;
 

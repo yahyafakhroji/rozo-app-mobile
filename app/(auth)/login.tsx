@@ -25,7 +25,6 @@ import { useWallet } from "@/providers";
 import { usePrivy, type PrivyEmbeddedWalletAccount } from "@privy-io/expo";
 import { useLogin } from "@privy-io/expo/ui";
 import * as Application from "expo-application";
-import { useRouter } from "expo-router";
 import { CheckCircle, XCircle } from "lucide-react-native";
 import * as React from "react";
 import { useState } from "react";
@@ -35,14 +34,9 @@ import { Linking, Platform } from "react-native";
 const VALID_INVITATION_CODE = "ROZO";
 const INVITATION_VALIDATED_KEY = "invitation.validated";
 
-/**
- * Login screen with invitation modal gate
- */
 export default function LoginScreen() {
-  const router = useRouter();
   const colorScheme = useColorScheme();
 
-  // Privy
   const { isReady: ready, user } = usePrivy();
   const { login } = useLogin();
   const { createWallet, isCreating } = useWallet();
@@ -53,7 +47,6 @@ export default function LoginScreen() {
 
   const [isAuthLoading, setIsAuthLoading] = useState(false);
 
-  // Invitation modal state
   const [showInvitationModal, setShowInvitationModal] = useState(false);
   const [invitationCode, setInvitationCode] = useState("");
   const [isValidating, setIsValidating] = useState(false);
@@ -61,31 +54,27 @@ export default function LoginScreen() {
     "idle" | "valid" | "invalid"
   >("idle");
 
-  // Check if invitation was already validated
   React.useEffect(() => {
     const isValidated = storage.getBoolean(INVITATION_VALIDATED_KEY);
     const isIOS = Platform.OS === "ios";
 
-    // If user is already authenticated, they've passed the gate
     if (user) {
       if (!isValidated) {
         storage.set(INVITATION_VALIDATED_KEY, true);
       }
-      router.replace("/balance");
+      // Navigation is handled by AuthRouter in root layout
       return;
     }
 
-    // Skip invitation modal for iOS
     if (isIOS) {
       storage.set(INVITATION_VALIDATED_KEY, true);
       return;
     }
 
-    // If not validated and not authenticated, show invitation modal
     if (!isValidated) {
       setShowInvitationModal(true);
     }
-  }, [user, router]);
+  }, [user]);
 
   const handleValidateInvitation = async () => {
     if (!invitationCode.trim()) {
@@ -96,19 +85,14 @@ export default function LoginScreen() {
     setIsValidating(true);
     setValidationState("idle");
 
-    // Simulate validation delay for better UX
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     const isValid = invitationCode === VALID_INVITATION_CODE;
 
     if (isValid) {
       setValidationState("valid");
-      // toastSuccess(t("invitation.validCode"));
-
-      // Save validation state
       storage.set(INVITATION_VALIDATED_KEY, true);
 
-      // Close modal after short delay
       setTimeout(() => {
         setShowInvitationModal(false);
         setIsValidating(false);
@@ -158,12 +142,8 @@ export default function LoginScreen() {
           await createWallet("USDC_BASE");
         }
 
-        // Mark invitation as validated for authenticated users
         storage.set(INVITATION_VALIDATED_KEY, true);
-
-        setTimeout(() => {
-          router.replace("/balance");
-        }, 2000);
+        // Navigation is handled by AuthRouter in root layout
       }
     } catch (error) {
       setIsAuthLoading(false);
@@ -181,20 +161,17 @@ export default function LoginScreen() {
     <>
       <FocusAwareStatusBar />
 
-      {/* Invitation Modal */}
       <Modal isOpen={showInvitationModal} size="lg">
         <ModalBackdrop />
         <ModalContent className="bg-white dark:bg-neutral-900 rounded-2xl p-0">
           <ModalBody className="p-8 m-0">
             <VStack space="lg" className="items-center w-full">
-              {/* Logo */}
               {colorScheme === "dark" ? (
                 <LogoWhiteSvg width={80} height={80} />
               ) : (
                 <LogoSvg width={80} height={80} />
               )}
 
-              {/* Title and subtitle */}
               <VStack space="sm" className="items-center">
                 <Heading size="xl" className="text-typography-900 dark:text-typography-100 text-center">
                   {t("invitation.title")}
@@ -204,7 +181,6 @@ export default function LoginScreen() {
                 </Text>
               </VStack>
 
-              {/* Input field */}
               <Input
                 variant="outline"
                 size="lg"
@@ -242,7 +218,6 @@ export default function LoginScreen() {
                 )}
               </Input>
 
-              {/* Continue button */}
               <Button
                 size="lg"
                 action="primary"
@@ -255,7 +230,6 @@ export default function LoginScreen() {
                 </ButtonText>
               </Button>
 
-              {/* Divider */}
               <HStack space="md" className="w-full items-center justify-center">
                 <Box className="h-px flex-1 bg-background-200 dark:bg-background-700" />
                 <Text size="sm" className="text-typography-400 dark:text-typography-500 px-2">
@@ -264,7 +238,6 @@ export default function LoginScreen() {
                 <Box className="h-px flex-1 bg-background-200 dark:bg-background-700" />
               </HStack>
 
-              {/* Join waitlist button */}
               <Button
                 size="lg"
                 action="primary"
@@ -280,9 +253,7 @@ export default function LoginScreen() {
         </ModalContent>
       </Modal>
 
-      {/* Main login content */}
       <Box className="flex-1 items-center justify-center bg-background-0 dark:bg-background-950 px-6">
-        {/* Logo and title section */}
         <VStack space="md" className="mb-6 w-full items-center justify-center">
           {colorScheme === "dark" ? (
             <LogoWhiteSvg width={100} height={100} />
@@ -299,7 +270,6 @@ export default function LoginScreen() {
           </Text>
         </VStack>
 
-        {/* Button section */}
         <Button
           size="lg"
           action="primary"
@@ -328,7 +298,6 @@ export default function LoginScreen() {
           </Box>
         )}
 
-        {/* App version */}
         <Box className="mt-6 w-full items-center justify-center">
           <Text size="sm" className="text-typography-400 dark:text-typography-500">
             Version {Application.nativeApplicationVersion}
